@@ -1,0 +1,42 @@
+{
+  "name": "Booking",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "title": "User Email"
+    },
+    "class_id": {
+      "type": "string",
+      "title": "Class Schedule ID"
+    },
+    "class_name": {
+      "type": "string",
+      "title": "Class Name"
+    },
+    "date": {
+      "type": "string",
+      "title": "Date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "confirmed",
+        "pending",
+        "cancelled",
+        "attended",
+        "no_show"
+      ],
+      "title": "Status",
+      "default": "pending"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "user_email",
+    "class_id"
+  ]
+}

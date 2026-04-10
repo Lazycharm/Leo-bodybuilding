@@ -1,0 +1,57 @@
+{
+  "name": "Announcement",
+  "type": "object",
+  "properties": {
+    "title_en": {
+      "type": "string",
+      "title": "Title (English)"
+    },
+    "title_ar": {
+      "type": "string",
+      "title": "Title (Arabic)"
+    },
+    "content_en": {
+      "type": "string",
+      "title": "Content (English)"
+    },
+    "content_ar": {
+      "type": "string",
+      "title": "Content (Arabic)"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "general",
+        "offer",
+        "event",
+        "maintenance",
+        "urgent"
+      ],
+      "title": "Type",
+      "default": "general"
+    },
+    "is_active": {
+      "type": "boolean",
+      "title": "Active",
+      "default": true
+    },
+    "expires_at": {
+      "type": "string",
+      "title": "Expires At"
+    },
+    "target_audience": {
+      "type": "string",
+      "enum": [
+        "all",
+        "members",
+        "visitors"
+      ],
+      "title": "Target Audience",
+      "default": "all"
+    }
+  },
+  "required": [
+    "title_en",
+    "content_en"
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "name": "Inquiry",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Full Name"
+    },
+    "email": {
+      "type": "string",
+      "title": "Email"
+    },
+    "phone": {
+      "type": "string",
+      "title": "Phone"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "membership",
+        "trial",
+        "general",
+        "booking",
+        "complaint",
+        "upgrade"
+      ],
+      "title": "Inquiry Type",
+      "default": "general"
+    },
+    "message": {
+      "type": "string",
+      "title": "Message"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "contacted",
+        "resolved",
+        "closed"
+      ],
+      "title": "Status",
+      "default": "new"
+    },
+    "plan_interest": {
+      "type": "string",
+      "title": "Plan Interest"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "website",
+        "whatsapp",
+        "walk-in",
+        "referral",
+        "social"
+      ],
+      "title": "Source",
+      "default": "website"
+    },
+    "admin_notes": {
+      "type": "string",
+      "title": "Admin Notes"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

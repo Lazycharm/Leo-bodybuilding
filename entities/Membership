@@ -1,0 +1,61 @@
+{
+  "name": "Membership",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "title": "User Email"
+    },
+    "plan_id": {
+      "type": "string",
+      "title": "Plan ID"
+    },
+    "plan_name": {
+      "type": "string",
+      "title": "Plan Name"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "expired",
+        "pending",
+        "cancelled",
+        "frozen"
+      ],
+      "title": "Status",
+      "default": "pending"
+    },
+    "start_date": {
+      "type": "string",
+      "title": "Start Date"
+    },
+    "end_date": {
+      "type": "string",
+      "title": "End Date"
+    },
+    "amount_paid": {
+      "type": "number",
+      "title": "Amount Paid (AED)"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "cash",
+        "card",
+        "bank_transfer",
+        "online"
+      ],
+      "title": "Payment Method"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "user_email",
+    "plan_id",
+    "status"
+  ]
+}

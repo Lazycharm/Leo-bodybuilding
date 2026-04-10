@@ -1,0 +1,73 @@
+{
+  "name": "ClassSchedule",
+  "type": "object",
+  "properties": {
+    "class_name_en": {
+      "type": "string",
+      "title": "Class Name (English)"
+    },
+    "class_name_ar": {
+      "type": "string",
+      "title": "Class Name (Arabic)"
+    },
+    "trainer_id": {
+      "type": "string",
+      "title": "Trainer ID"
+    },
+    "day_of_week": {
+      "type": "string",
+      "enum": [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday"
+      ],
+      "title": "Day"
+    },
+    "start_time": {
+      "type": "string",
+      "title": "Start Time"
+    },
+    "end_time": {
+      "type": "string",
+      "title": "End Time"
+    },
+    "capacity": {
+      "type": "number",
+      "title": "Capacity",
+      "default": 20
+    },
+    "gender": {
+      "type": "string",
+      "enum": [
+        "all",
+        "male",
+        "female"
+      ],
+      "title": "Gender",
+      "default": "all"
+    },
+    "location_en": {
+      "type": "string",
+      "title": "Location (English)"
+    },
+    "location_ar": {
+      "type": "string",
+      "title": "Location (Arabic)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "title": "Active",
+      "default": true
+    }
+  },
+  "required": [
+    "class_name_en",
+    "day_of_week",
+    "start_time",
+    "end_time"
+  ]
+}
