@@ -73,7 +73,7 @@ const translations = {
   "contact.email": { en: "Email", ar: "البريد الإلكتروني" },
   "contact.phone": { en: "Phone", ar: "الهاتف" },
   "contact.message": { en: "Message", ar: "الرسالة" },
-  "contact.address": { en: "Ajman, UAE", ar: "عجمان، الإمارات" },
+  "contact.address": { en: "Shop #16, City Tower, Al Nuaimiya 3, Opp. Grand Mall, Ajman", ar: "المحل 16، سيتي تاور، النعيمية 3، مقابل جراند مول، عجمان" },
   "contact.hours": { en: "Open Daily: 6AM - 11PM", ar: "مفتوح يومياً: 6 صباحاً - 11 مساءً" },
 
   // Plans
@@ -186,10 +186,10 @@ export function useLanguage() {
   return { lang, setLang, t, isRTL, localizedField };
 }
 
-export const WHATSAPP_NUMBER = "971501234567";
-export const PHONE_NUMBER = "+971 50 123 4567";
-export const GYM_EMAIL = "info@leogym.ae";
-export const GYM_ADDRESS_EN = "Ajman, UAE";
-export const GYM_ADDRESS_AR = "عجمان، الإمارات العربية المتحدة";
-export const GOOGLE_MAPS_URL = "https://maps.google.com/?q=Ajman+UAE";
+export const WHATSAPP_NUMBER = "971564360234";
+export const PHONE_NUMBER = "+971 56 436 0234";
+export const GYM_EMAIL = "leobodybuildinggym@gmail.com";
+export const GYM_ADDRESS_EN = "Shop #16, City Tower, Al Nuaimiya 3, Opp. Grand Mall, Ajman";
+export const GYM_ADDRESS_AR = "المحل 16، سيتي تاور، النعيمية 3، مقابل جراند مول، عجمان";
+export const GOOGLE_MAPS_URL = "https://maps.google.com/?q=Shop+16,+City+Tower,+Al+Nuaimiya+3,+Opp+Grand+Mall,+Ajman";
 export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}`;
