@@ -1,26 +1,48 @@
 import { useLanguage, WHATSAPP_URL } from "../lib/i18n";
-import { FEMALE_TRAINER_IMAGE, MALE_TRAINER_IMAGE } from "@/lib/assets";
 import SectionHeader from "../components/public/SectionHeader";
 import { entities } from "@/api/appClient";
 import { useQuery } from "@tanstack/react-query";
 import { MessageCircle } from "lucide-react";
-
-const MALE_TRAINER_IMG = MALE_TRAINER_IMAGE;
-const FEMALE_TRAINER_IMG = FEMALE_TRAINER_IMAGE;
-
-const DEFAULT_TRAINERS = [
-  { name_en: "Ahmed Hassan", name_ar: "أحمد حسن", title_en: "Head Strength Coach", title_ar: "مدرب القوة الرئيسي", bio_en: "With 12 years of experience in strength and conditioning, Ahmed has trained hundreds of members to achieve their peak physical form.", bio_ar: "مع 12 عاماً من الخبرة في القوة والتكييف، درب أحمد مئات الأعضاء لتحقيق أفضل شكل بدني.", photo_url: MALE_TRAINER_IMG, specialties_en: ["Strength Training", "CrossFit", "Body Building"], gender: "male", experience_years: 12 },
-  { name_en: "Sara Al Mansoori", name_ar: "سارة المنصوري", title_en: "Ladies Fitness Director", title_ar: "مديرة لياقة السيدات", bio_en: "Sara specializes in women's fitness with expertise in Zumba, aerobics, and holistic wellness programs for ladies of all fitness levels.", bio_ar: "تتخصص سارة في لياقة المرأة مع خبرة في الزومبا والأيروبيكس وبرامج العافية الشاملة للسيدات من جميع مستويات اللياقة.", photo_url: FEMALE_TRAINER_IMG, specialties_en: ["Zumba", "Aerobics", "Yoga", "PCOS Programs"], gender: "female", experience_years: 8 },
-];
+import { useHomepageMedia } from "@/hooks/useHomepageMedia";
 
 export default function Trainers() {
   const { t, lang, localizedField } = useLanguage();
-  const { data: trainers = [] } = useQuery({
+  const { data: homepageMedia } = useHomepageMedia();
+  const { data: trainers = [], isLoading } = useQuery({
     queryKey: ["trainers"],
     queryFn: () => entities.Trainer.filter({ is_active: true }, "sort_order"),
   });
 
-  const items = trainers.length > 0 ? trainers : DEFAULT_TRAINERS;
+  const fallbackTrainers = [
+    homepageMedia?.male_trainer_image_url
+      ? {
+          id: "male-fallback",
+          name_en: "Expert Coach",
+          name_ar: "مدرب خبير",
+          title_en: "LEO Trainer",
+          title_ar: "مدرب ليو",
+          bio_en: "Professional training support tailored to your fitness goals.",
+          bio_ar: "دعم تدريبي احترافي مصمم حسب أهدافك الرياضية.",
+          photo_url: homepageMedia.male_trainer_image_url,
+          specialties_en: [],
+        }
+      : null,
+    homepageMedia?.female_trainer_image_url
+      ? {
+          id: "female-fallback",
+          name_en: "Ladies Coach",
+          name_ar: "مدربة السيدات",
+          title_en: "LEO Trainer",
+          title_ar: "مدربة ليو",
+          bio_en: "Dedicated coaching support for ladies programs and private sessions.",
+          bio_ar: "دعم تدريبي مخصص لبرامج السيدات والجلسات الخاصة.",
+          photo_url: homepageMedia.female_trainer_image_url,
+          specialties_en: [],
+        }
+      : null,
+  ].filter(Boolean);
+
+  const items = trainers.length > 0 ? trainers : fallbackTrainers;
 
   return (
     <div className="pt-24 pb-16">
@@ -29,44 +51,58 @@ export default function Trainers() {
           <SectionHeader title={t("section.trainers")} subtitle={t("section.trainers_sub")} />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {items.map((trainer, i) => (
-            <div key={i} className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/50 transition-all">
-              <div className="aspect-[3/4] overflow-hidden relative">
-                <img
-                  src={trainer.photo_url || MALE_TRAINER_IMG}
-                  alt={localizedField(trainer, "name")}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
+        {isLoading ? (
+          <div className="mx-auto grid max-w-4xl grid-cols-1 gap-8 md:grid-cols-2">
+            {Array.from({ length: 2 }).map((_, index) => (
+              <div key={index} className="overflow-hidden rounded-2xl border border-border bg-card">
+                <div className="aspect-[3/4] animate-pulse bg-muted" />
               </div>
-              <div className="p-6 -mt-16 relative">
-                <h3 className="font-heading font-bold text-foreground text-xl">{localizedField(trainer, "name")}</h3>
-                <p className="text-primary text-sm font-medium mb-2">{localizedField(trainer, "title")}</p>
-                <p className="text-muted-foreground text-sm leading-relaxed mb-3">{localizedField(trainer, "bio")}</p>
-                {trainer.experience_years && (
-                  <p className="text-xs text-muted-foreground mb-3">
-                    {lang === "ar" ? `${trainer.experience_years} سنوات خبرة` : `${trainer.experience_years} years experience`}
-                  </p>
-                )}
-                <div className="flex flex-wrap gap-1.5 mb-4">
-                  {(trainer.specialties_en || []).map((s, j) => (
-                    <span key={j} className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full">{s}</span>
-                  ))}
+            ))}
+          </div>
+        ) : items.length === 0 ? (
+          <div className="mx-auto max-w-3xl rounded-2xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
+            {lang === "ar" ? "تمت إزالة صور المدربين التجريبية. أضف صور المدربين الحقيقيين من لوحة الإدارة لعرضها هنا." : "The demo trainer photos have been removed. Add your real trainers from the admin panel to show them here."}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {items.map((trainer, i) => (
+              <div key={trainer.id || i} className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/50 transition-all">
+                <div className="aspect-[3/4] overflow-hidden relative bg-slate-950">
+                  {trainer.photo_url ? (
+                    <img src={trainer.photo_url} alt={localizedField(trainer, "name")} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="h-full w-full bg-[linear-gradient(135deg,#111827_0%,#0f172a_55%,#020617_100%)]" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
                 </div>
-                <a
-                  href={WHATSAPP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-green-400 hover:text-green-300 text-sm font-medium"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  {t("cta.whatsapp")}
-                </a>
+                <div className="p-6 -mt-16 relative">
+                  <h3 className="font-heading font-bold text-foreground text-xl">{localizedField(trainer, "name")}</h3>
+                  <p className="text-primary text-sm font-medium mb-2">{localizedField(trainer, "title")}</p>
+                  <p className="text-muted-foreground text-sm leading-relaxed mb-3">{localizedField(trainer, "bio")}</p>
+                  {trainer.experience_years && (
+                    <p className="text-xs text-muted-foreground mb-3">
+                      {lang === "ar" ? `${trainer.experience_years} سنوات خبرة` : `${trainer.experience_years} years experience`}
+                    </p>
+                  )}
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    {(trainer.specialties_en || []).map((s, j) => (
+                      <span key={j} className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full">{s}</span>
+                    ))}
+                  </div>
+                  <a
+                    href={WHATSAPP_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-green-400 hover:text-green-300 text-sm font-medium"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    {t("cta.whatsapp")}
+                  </a>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

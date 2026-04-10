@@ -1,12 +1,12 @@
 import { useLanguage } from "../lib/i18n";
-import { INTERIOR_IMAGE } from "@/lib/assets";
 import SectionHeader from "../components/public/SectionHeader";
 import { Award, Target, Heart, Users } from "lucide-react";
-
-const INTERIOR_IMG = INTERIOR_IMAGE;
+import { useHomepageMedia } from "@/hooks/useHomepageMedia";
 
 export default function About() {
   const { t, lang } = useLanguage();
+  const { data: homepageMedia } = useHomepageMedia();
+  const aboutImage = homepageMedia?.hero_image_url || homepageMedia?.gents_image_url || homepageMedia?.ladies_image_url || "";
 
   const values = [
     { icon: Target, title_en: "Excellence", title_ar: "التميز", desc_en: "We strive for the highest standards in everything we do", desc_ar: "نسعى لأعلى المعايير في كل ما نقوم به" },
@@ -19,7 +19,11 @@ export default function About() {
     <div className="pt-24 pb-16">
       {/* Hero */}
       <div className="relative h-64 md:h-96 mb-12">
-        <img src={INTERIOR_IMG} alt="LEO Gym" className="w-full h-full object-cover" />
+        {aboutImage ? (
+          <img src={aboutImage} alt="LEO Gym" className="w-full h-full object-cover" />
+        ) : (
+          <div className="h-full w-full bg-[radial-gradient(circle_at_top_right,rgba(230,179,47,0.18),transparent_25%),linear-gradient(135deg,#111827_0%,#0f172a_55%,#020617_100%)]" />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12">
           <div className="max-w-7xl mx-auto">

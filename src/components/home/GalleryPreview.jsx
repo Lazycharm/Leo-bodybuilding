@@ -5,52 +5,47 @@ import { ArrowRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { entities } from "@/api/appClient";
 import { useHomepageMedia } from "@/hooks/useHomepageMedia";
-import { HERO_IMAGE, INTERIOR_IMAGE, STUDIO_IMAGE, WEIGHT_IMAGE } from "@/lib/assets";
-
-const HERO_IMG = HERO_IMAGE;
-const INTERIOR_IMG = INTERIOR_IMAGE;
-const WEIGHT_IMG = WEIGHT_IMAGE;
-const STUDIO_IMG = STUDIO_IMAGE;
 
 export default function GalleryPreview() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { data: homepageMedia } = useHomepageMedia();
-  const { data: items = [] } = useQuery({
+  const { data: items = [], isLoading } = useQuery({
     queryKey: ["gallery-preview"],
     queryFn: () => entities.GalleryItem.filter({ is_active: true }, "sort_order", 4),
   });
 
-  const fallbackImages = homepageMedia?.gallery_preview_images?.length
-    ? homepageMedia.gallery_preview_images
-    : [HERO_IMG, INTERIOR_IMG, WEIGHT_IMG, STUDIO_IMG];
-
-  const images = items.length > 0 ? items.map((item) => item.image_url).slice(0, 4) : fallbackImages;
+  const galleryImages = items.map((item) => item.image_url).filter(Boolean).slice(0, 4);
+  const settingImages = (homepageMedia?.gallery_preview_images || []).filter(Boolean).slice(0, 4);
+  const images = galleryImages.length > 0 ? galleryImages : settingImages;
 
   return (
     <section className="py-16 md:py-24 px-4 bg-card/50">
       <div className="max-w-7xl mx-auto">
-        <SectionHeader
-          title={t("section.gallery")}
-          subtitle={t("section.gallery_sub")}
-        />
+        <SectionHeader title={t("section.gallery")} subtitle={t("section.gallery_sub")} />
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-          {images.map((img, i) => (
-            <div
-              key={i}
-              className={`group relative rounded-xl overflow-hidden ${
-                i === 0 ? "md:col-span-2 md:row-span-2" : ""
-              } aspect-square`}
-            >
-              <img
-                src={img}
-                alt={`LEO Gym ${i + 1}`}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors" />
-            </div>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className={`animate-pulse rounded-xl bg-muted ${i === 0 ? "aspect-square md:col-span-2 md:row-span-2" : "aspect-square"}`} />
+            ))}
+          </div>
+        ) : images.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+            {lang === "ar" ? "ستظهر صور المعرض هنا بعد إضافتها من لوحة الإدارة." : "Gallery images will appear here after you add them from the admin panel."}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+            {images.map((img, i) => (
+              <div
+                key={`${img}-${i}`}
+                className={`group relative overflow-hidden rounded-xl ${i === 0 ? "aspect-square md:col-span-2 md:row-span-2" : "aspect-square"}`}
+              >
+                <img src={img} alt={`LEO Gym ${i + 1}`} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/30" />
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="text-center mt-8">
           <Link

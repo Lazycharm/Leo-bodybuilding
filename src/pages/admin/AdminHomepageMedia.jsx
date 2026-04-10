@@ -119,7 +119,7 @@ export default function AdminHomepageMedia() {
       setForm((current) => ({
         ...current,
         [field]: options.multiple
-          ? Array.from(new Set([...(current[field] || []), ...uploadedUrls]))
+          ? (options.replaceExisting ? uploadedUrls : Array.from(new Set([...(current[field] || []), ...uploadedUrls])))
           : uploadedUrls[0],
       }));
 
@@ -257,21 +257,21 @@ export default function AdminHomepageMedia() {
           <div className="flex flex-wrap items-center gap-3">
             <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted">
               {uploadingField === "gallery_preview_images" ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
-              <span>{uploadingField === "gallery_preview_images" ? (lang === "ar" ? "جارٍ الرفع..." : "Uploading...") : (lang === "ar" ? "رفع صور المعرض" : "Upload gallery images")}</span>
+                <span>{uploadingField === "gallery_preview_images" ? (lang === "ar" ? "جارٍ الرفع..." : "Uploading...") : (lang === "ar" ? "استبدال صور المعرض" : "Replace gallery images")}</span>
               <input
                 type="file"
                 accept="image/*"
                 multiple
                 className="hidden"
                 onChange={(event) => {
-                  handleFileUpload("gallery_preview_images", event.target.files, { multiple: true });
+                  handleFileUpload("gallery_preview_images", event.target.files, { multiple: true, replaceExisting: true });
                   event.target.value = "";
                 }}
               />
             </label>
 
             <span className="text-xs text-muted-foreground">
-              {lang === "ar" ? "يمكنك رفع أكثر من صورة وسيتم إضافتها تلقائياً إلى المعرض." : "Upload one or more images and they will be added to the gallery preview list."}
+              {lang === "ar" ? "رفع صور جديدة هنا سيستبدل الصور القديمة في المعاينة." : "Uploading here replaces the older preview photos with the new ones."}
             </span>
           </div>
         </div>
