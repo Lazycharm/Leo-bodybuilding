@@ -3,6 +3,33 @@ import { ensureProfile } from "@/api/appClient";
 import { ensureSupabaseConfigured, isSupabaseConfigured, supabase } from "@/lib/supabaseClient";
 
 const AuthContext = createContext(null);
+const AUTH_TIMEOUT_MS = 4000;
+
+function withTimeout(promise, timeoutMs = AUTH_TIMEOUT_MS) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      window.setTimeout(() => {
+        reject(new Error("Authentication request timed out."));
+      }, timeoutMs);
+    }),
+  ]);
+}
+
+function buildFallbackUser(authUser) {
+  if (!authUser) return null;
+
+  return {
+    id: authUser.id,
+    email: authUser.email || "",
+    full_name: authUser?.user_metadata?.full_name || authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "Member",
+    phone: authUser?.phone || authUser?.user_metadata?.phone || null,
+    role: authUser?.user_metadata?.role || "member",
+    avatar_url: authUser?.user_metadata?.avatar_url || null,
+    created_at: authUser?.created_at || null,
+    updated_at: authUser?.updated_at || authUser?.created_at || null,
+  };
+}
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -33,14 +60,16 @@ export const AuthProvider = ({ children }) => {
       }
 
       try {
-        const profile = await ensureProfile(session.user);
-        setUser(profile);
+        const profile = await withTimeout(ensureProfile(session.user));
+        setUser(profile || buildFallbackUser(session.user));
         setIsAuthenticated(true);
         setAuthError(null);
       } catch (error) {
+        setUser(buildFallbackUser(session.user));
+        setIsAuthenticated(true);
         setAuthError({
-          type: "auth_error",
-          message: error.message || "Unable to load your account.",
+          type: "auth_warning",
+          message: error.message || "Account profile loading is delayed.",
         });
       } finally {
         setIsLoadingAuth(false);
@@ -70,7 +99,7 @@ export const AuthProvider = ({ children }) => {
       const {
         data: { session },
         error,
-      } = await supabase.auth.getSession();
+      } = await withTimeout(supabase.auth.getSession());
 
       if (error) {
         throw error;
@@ -82,8 +111,17 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      const profile = await ensureProfile(session.user);
-      setUser(profile);
+      try {
+        const profile = await withTimeout(ensureProfile(session.user));
+        setUser(profile || buildFallbackUser(session.user));
+      } catch (profileError) {
+        setUser(buildFallbackUser(session.user));
+        setAuthError({
+          type: "auth_warning",
+          message: profileError.message || "Profile loading is taking longer than expected.",
+        });
+      }
+
       setIsAuthenticated(true);
     } catch (error) {
       setUser(null);
