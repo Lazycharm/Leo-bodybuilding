@@ -11,6 +11,7 @@ const entityTableMap = {
   Membership: "memberships",
   MembershipPlan: "membership_plans",
   Program: "programs",
+  SiteSetting: "site_settings",
   Testimonial: "testimonials",
   Trainer: "trainers",
   User: "profiles",

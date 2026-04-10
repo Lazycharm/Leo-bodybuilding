@@ -41,6 +41,7 @@ import AdminHealthPrograms from "./pages/admin/AdminHealthPrograms";
 import AdminPlans from "./pages/admin/AdminPlans";
 import AdminSchedules from "./pages/admin/AdminSchedules";
 import AdminGallery from "./pages/admin/AdminGallery";
+import AdminHomepageMedia from "./pages/admin/AdminHomepageMedia";
 import AdminTestimonials from "./pages/admin/AdminTestimonials";
 import AdminInquiries from "./pages/admin/AdminInquiries";
 import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
@@ -113,6 +114,7 @@ const AuthenticatedApp = () => {
         <Route path="/admin/plans" element={<AdminPlans />} />
         <Route path="/admin/schedules" element={<AdminSchedules />} />
         <Route path="/admin/gallery" element={<AdminGallery />} />
+        <Route path="/admin/homepage-media" element={<AdminHomepageMedia />} />
         <Route path="/admin/testimonials" element={<AdminTestimonials />} />
         <Route path="/admin/inquiries" element={<AdminInquiries />} />
         <Route path="/admin/announcements" element={<AdminAnnouncements />} />

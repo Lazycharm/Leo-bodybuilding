@@ -4,24 +4,40 @@ import SectionHeader from "../public/SectionHeader";
 import { ArrowRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { entities } from "@/api/appClient";
+import { useHomepageMedia } from "@/hooks/useHomepageMedia";
 import { FEMALE_TRAINER_IMAGE, MALE_TRAINER_IMAGE } from "@/lib/assets";
 
 const MALE_TRAINER_IMG = MALE_TRAINER_IMAGE;
 const FEMALE_TRAINER_IMG = FEMALE_TRAINER_IMAGE;
 
-const DEFAULT_TRAINERS = [
-  { name_en: "Ahmed Hassan", name_ar: "أحمد حسن", title_en: "Head Strength Coach", title_ar: "مدرب القوة الرئيسي", photo_url: MALE_TRAINER_IMG, specialties_en: ["Strength Training", "CrossFit"] },
-  { name_en: "Sara Al Mansoori", name_ar: "سارة المنصوري", title_en: "Ladies Fitness Specialist", title_ar: "أخصائية لياقة السيدات", photo_url: FEMALE_TRAINER_IMG, specialties_en: ["Zumba", "Aerobics", "Yoga"] },
-];
-
 export default function TrainersPreview() {
   const { t, localizedField } = useLanguage();
+  const { data: homepageMedia } = useHomepageMedia();
   const { data: trainers = [] } = useQuery({
     queryKey: ["trainers-preview"],
     queryFn: () => entities.Trainer.filter({ is_active: true }, "sort_order", 2),
   });
 
-  const items = trainers.length > 0 ? trainers : DEFAULT_TRAINERS;
+  const defaultTrainers = [
+    {
+      name_en: "Ahmed Hassan",
+      name_ar: "أحمد حسن",
+      title_en: "Head Strength Coach",
+      title_ar: "مدرب القوة الرئيسي",
+      photo_url: homepageMedia?.male_trainer_image_url || MALE_TRAINER_IMG,
+      specialties_en: ["Strength Training", "CrossFit"],
+    },
+    {
+      name_en: "Sara Al Mansoori",
+      name_ar: "سارة المنصوري",
+      title_en: "Ladies Fitness Specialist",
+      title_ar: "أخصائية لياقة السيدات",
+      photo_url: homepageMedia?.female_trainer_image_url || FEMALE_TRAINER_IMG,
+      specialties_en: ["Zumba", "Aerobics", "Yoga"],
+    },
+  ];
+
+  const items = trainers.length > 0 ? trainers : defaultTrainers;
 
   return (
     <section className="py-16 md:py-24 px-4">

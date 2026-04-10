@@ -2,17 +2,20 @@ import { Link } from "react-router-dom";
 import { ArrowRight, MessageCircle } from "lucide-react";
 import { useLanguage, WHATSAPP_URL } from "../../lib/i18n";
 import { HERO_IMAGE } from "@/lib/assets";
+import { useHomepageMedia } from "@/hooks/useHomepageMedia";
 
 const HERO_IMG = HERO_IMAGE;
 
 export default function HeroSection() {
   const { t, isRTL, lang } = useLanguage();
+  const { data: homepageMedia } = useHomepageMedia();
+  const heroImage = homepageMedia?.hero_image_url || HERO_IMG;
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0">
-        <img src={HERO_IMG} alt="LEO Gym" className="w-full h-full object-cover" />
+        <img src={heroImage} alt="LEO Gym" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/40" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
       </div>

@@ -19,6 +19,7 @@ const ADMIN_NAV = [
   { key: "admin.plans", path: "/admin/plans", icon: CreditCard },
   { key: "admin.schedules", path: "/admin/schedules", icon: Calendar },
   { key: "admin.gallery", path: "/admin/gallery", icon: Image },
+  { key: "admin.homepage_media", path: "/admin/homepage-media", icon: Image },
   { key: "admin.testimonials", path: "/admin/testimonials", icon: MessageSquare },
   { key: "admin.inquiries", path: "/admin/inquiries", icon: Mail },
   { key: "admin.announcements", path: "/admin/announcements", icon: Bell },

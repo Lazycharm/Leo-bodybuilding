@@ -4,6 +4,7 @@ import SectionHeader from "../public/SectionHeader";
 import { ArrowRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { entities } from "@/api/appClient";
+import { useHomepageMedia } from "@/hooks/useHomepageMedia";
 import { HERO_IMAGE, INTERIOR_IMAGE, STUDIO_IMAGE, WEIGHT_IMAGE } from "@/lib/assets";
 
 const HERO_IMG = HERO_IMAGE;
@@ -13,12 +14,17 @@ const STUDIO_IMG = STUDIO_IMAGE;
 
 export default function GalleryPreview() {
   const { t } = useLanguage();
+  const { data: homepageMedia } = useHomepageMedia();
   const { data: items = [] } = useQuery({
     queryKey: ["gallery-preview"],
     queryFn: () => entities.GalleryItem.filter({ is_active: true }, "sort_order", 4),
   });
 
-  const images = items.length > 0 ? items.map((item) => item.image_url) : [HERO_IMG, INTERIOR_IMG, WEIGHT_IMG, STUDIO_IMG];
+  const fallbackImages = homepageMedia?.gallery_preview_images?.length
+    ? homepageMedia.gallery_preview_images
+    : [HERO_IMG, INTERIOR_IMG, WEIGHT_IMG, STUDIO_IMG];
+
+  const images = items.length > 0 ? items.map((item) => item.image_url).slice(0, 4) : fallbackImages;
 
   return (
     <section className="py-16 md:py-24 px-4 bg-card/50">

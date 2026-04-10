@@ -109,6 +109,7 @@ const translations = {
   "admin.plans": { en: "Plans", ar: "الخطط" },
   "admin.schedules": { en: "Schedules", ar: "الجداول" },
   "admin.gallery": { en: "Gallery", ar: "المعرض" },
+  "admin.homepage_media": { en: "Homepage Images", ar: "صور الصفحة الرئيسية" },
   "admin.testimonials": { en: "Testimonials", ar: "الشهادات" },
   "admin.inquiries": { en: "Inquiries", ar: "الاستفسارات" },
   "admin.announcements": { en: "Announcements", ar: "الإعلانات" },

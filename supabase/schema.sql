@@ -52,6 +52,19 @@ create table if not exists public.announcements (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.site_settings (
+  id uuid primary key default gen_random_uuid(),
+  setting_key text not null unique,
+  hero_image_url text,
+  gents_image_url text,
+  ladies_image_url text,
+  male_trainer_image_url text,
+  female_trainer_image_url text,
+  gallery_preview_images text[] not null default '{}',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists public.membership_plans (
   id uuid primary key default gen_random_uuid(),
   title_en text not null,
@@ -215,6 +228,7 @@ create table if not exists public.bookings (
 );
 
 create index if not exists idx_profiles_role on public.profiles(role);
+create index if not exists idx_site_settings_key on public.site_settings(setting_key);
 create index if not exists idx_memberships_user_id on public.memberships(user_id);
 create index if not exists idx_bookings_user_id on public.bookings(user_id);
 create index if not exists idx_announcements_active on public.announcements(is_active);
@@ -227,6 +241,7 @@ create index if not exists idx_class_schedules_active on public.class_schedules(
 
 drop trigger if exists set_profiles_updated_at on public.profiles;
 drop trigger if exists set_announcements_updated_at on public.announcements;
+drop trigger if exists set_site_settings_updated_at on public.site_settings;
 drop trigger if exists set_membership_plans_updated_at on public.membership_plans;
 drop trigger if exists set_programs_updated_at on public.programs;
 drop trigger if exists set_health_programs_updated_at on public.health_programs;
@@ -240,6 +255,7 @@ drop trigger if exists set_bookings_updated_at on public.bookings;
 
 create trigger set_profiles_updated_at before update on public.profiles for each row execute procedure public.set_updated_at();
 create trigger set_announcements_updated_at before update on public.announcements for each row execute procedure public.set_updated_at();
+create trigger set_site_settings_updated_at before update on public.site_settings for each row execute procedure public.set_updated_at();
 create trigger set_membership_plans_updated_at before update on public.membership_plans for each row execute procedure public.set_updated_at();
 create trigger set_programs_updated_at before update on public.programs for each row execute procedure public.set_updated_at();
 create trigger set_health_programs_updated_at before update on public.health_programs for each row execute procedure public.set_updated_at();
@@ -253,7 +269,13 @@ create trigger set_bookings_updated_at before update on public.bookings for each
 
 alter table public.profiles enable row level security;
 alter table public.announcements enable row level security;
+alter table public.site_settings enable row level security;
 alter table public.membership_plans enable row level security;
+
+insert into storage.buckets (id, name, public)
+values ('site-media', 'site-media', true)
+on conflict (id) do update
+set public = excluded.public;
 alter table public.programs enable row level security;
 alter table public.health_programs enable row level security;
 alter table public.trainers enable row level security;
@@ -282,6 +304,12 @@ with check (auth.uid() = id or public.is_admin());
 -- Public content
 drop policy if exists "public read announcements" on public.announcements;
 drop policy if exists "admin manage announcements" on public.announcements;
+drop policy if exists "public read site settings" on public.site_settings;
+drop policy if exists "admin manage site settings" on public.site_settings;
+drop policy if exists "public read site media objects" on storage.objects;
+drop policy if exists "admin insert site media objects" on storage.objects;
+drop policy if exists "admin update site media objects" on storage.objects;
+drop policy if exists "admin delete site media objects" on storage.objects;
 drop policy if exists "public read plans" on public.membership_plans;
 drop policy if exists "admin manage plans" on public.membership_plans;
 drop policy if exists "public read programs" on public.programs;
@@ -312,6 +340,25 @@ create policy "public read announcements" on public.announcements
 for select using (is_active = true or public.is_admin());
 create policy "admin manage announcements" on public.announcements
 for all using (public.is_admin()) with check (public.is_admin());
+
+create policy "public read site settings" on public.site_settings
+for select using (true);
+create policy "admin manage site settings" on public.site_settings
+for all using (public.is_admin()) with check (public.is_admin());
+
+create policy "public read site media objects" on storage.objects
+for select to public
+using (bucket_id = 'site-media');
+create policy "admin insert site media objects" on storage.objects
+for insert to authenticated
+with check (bucket_id = 'site-media' and public.is_admin());
+create policy "admin update site media objects" on storage.objects
+for update to authenticated
+using (bucket_id = 'site-media' and public.is_admin())
+with check (bucket_id = 'site-media' and public.is_admin());
+create policy "admin delete site media objects" on storage.objects
+for delete to authenticated
+using (bucket_id = 'site-media' and public.is_admin());
 
 create policy "public read plans" on public.membership_plans
 for select using (is_active = true or public.is_admin());

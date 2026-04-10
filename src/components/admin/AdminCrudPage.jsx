@@ -3,13 +3,14 @@ import { useLanguage } from "../../lib/i18n";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Pencil, Trash2, Save } from "lucide-react";
+import { Loader2, Pencil, Plus, Save, Search, Trash2, UploadCloud } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { uploadImageFile } from "@/lib/supabaseClient";
 
 export default function AdminCrudPage({
   title,
@@ -30,6 +31,7 @@ export default function AdminCrudPage({
   const [editItem, setEditItem] = useState(null);
   const [form, setForm] = useState(defaultValues);
   const [saving, setSaving] = useState(false);
+  const [uploadingField, setUploadingField] = useState("");
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: [queryKey],
@@ -45,9 +47,13 @@ export default function AdminCrudPage({
     });
   });
 
+  const updateFormField = (fieldName, value) => {
+    setForm((current) => ({ ...current, [fieldName]: value }));
+  };
+
   const openCreate = () => {
     setEditItem(null);
-    setForm(defaultValues);
+    setForm({ ...defaultValues });
     setDialogOpen(true);
   };
 
@@ -73,7 +79,7 @@ export default function AdminCrudPage({
         toast({ title: lang === "ar" ? "تم الإنشاء" : "Created!" });
       }
 
-      queryClient.invalidateQueries({ queryKey: [queryKey] });
+      await queryClient.invalidateQueries({ queryKey: [queryKey] });
       setDialogOpen(false);
     } catch (error) {
       toast({
@@ -92,7 +98,7 @@ export default function AdminCrudPage({
     try {
       await entity.delete(id);
       toast({ title: lang === "ar" ? "تم الحذف" : "Deleted!" });
-      queryClient.invalidateQueries({ queryKey: [queryKey] });
+      await queryClient.invalidateQueries({ queryKey: [queryKey] });
     } catch (error) {
       toast({
         title: lang === "ar" ? "تعذر الحذف" : "Unable to delete",
@@ -102,18 +108,50 @@ export default function AdminCrudPage({
     }
   };
 
+  const handleImageUpload = async (field, files) => {
+    const selectedFile = files?.[0];
+
+    if (!selectedFile) {
+      return;
+    }
+
+    setUploadingField(field.field);
+
+    try {
+      const uploadedUrl = await uploadImageFile(selectedFile, `${entityName.toLowerCase()}/${field.field}`);
+      updateFormField(field.field, uploadedUrl);
+      toast({ title: lang === "ar" ? "تم رفع الصورة" : "Image uploaded" });
+    } catch (error) {
+      toast({
+        title: lang === "ar" ? "تعذر رفع الصورة" : "Unable to upload image",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingField("");
+    }
+  };
+
   const renderField = (field) => {
     const val = form[field.field];
-    const onChange = (v) => setForm({ ...form, [field.field]: v });
+    const onChange = (value) => updateFormField(field.field, value);
+    const inputClassName = "w-full px-3 py-2 bg-muted border border-border rounded-lg text-foreground text-sm focus:border-primary focus:outline-none";
+    const isImageField =
+      field.type === "image" || (/image|photo/i.test(field.label || "") && /_url$/i.test(field.field));
 
     if (field.type === "select") {
       return (
-        <select value={val || ""} onChange={(e) => onChange(e.target.value)} className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-foreground text-sm focus:border-primary focus:outline-none">
+        <select value={val || ""} onChange={(e) => onChange(e.target.value)} className={inputClassName}>
           <option value="">{lang === "ar" ? "اختر" : "Select"}</option>
-          {field.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          {field.options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
         </select>
       );
     }
+
     if (field.type === "boolean") {
       return (
         <label className="flex items-center gap-2 cursor-pointer">
@@ -122,62 +160,103 @@ export default function AdminCrudPage({
         </label>
       );
     }
+
+    if (isImageField) {
+      return (
+        <div className="space-y-3">
+          <input type="url" value={val || ""} onChange={(e) => onChange(e.target.value)} className={inputClassName} placeholder={field.label} />
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted">
+              {uploadingField === field.field ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
+              <span>{uploadingField === field.field ? (lang === "ar" ? "جارٍ الرفع..." : "Uploading...") : (lang === "ar" ? "رفع صورة" : "Upload image")}</span>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(event) => {
+                  handleImageUpload(field, event.target.files);
+                  event.target.value = "";
+                }}
+              />
+            </label>
+            <span className="text-xs text-muted-foreground">
+              {lang === "ar" ? "يمكنك لصق رابط أو رفع صورة مباشرة." : "You can paste a URL or upload a file directly."}
+            </span>
+          </div>
+          {val ? (
+            <div className="overflow-hidden rounded-lg border border-border bg-background p-1">
+              <img src={val} alt={field.label} className="h-28 w-full rounded-md object-cover" />
+            </div>
+          ) : null}
+        </div>
+      );
+    }
+
     if (field.type === "textarea") {
-      return <textarea value={val || ""} onChange={(e) => onChange(e.target.value)} rows={3} className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-foreground text-sm focus:border-primary focus:outline-none resize-none" placeholder={field.label} />;
+      return <textarea value={val || ""} onChange={(e) => onChange(e.target.value)} rows={3} className={`${inputClassName} resize-none`} placeholder={field.label} />;
     }
+
     if (field.type === "number") {
-      return <input type="number" value={val || ""} onChange={(e) => onChange(Number(e.target.value))} className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-foreground text-sm focus:border-primary focus:outline-none" placeholder={field.label} />;
+      return <input type="number" value={val ?? ""} onChange={(e) => onChange(e.target.value === "" ? "" : Number(e.target.value))} className={inputClassName} placeholder={field.label} />;
     }
+
     if (field.type === "array") {
-      return <input type="text" value={Array.isArray(val) ? val.join(", ") : val || ""} onChange={(e) => onChange(e.target.value.split(",").map((s) => s.trim()).filter(Boolean))} className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-foreground text-sm focus:border-primary focus:outline-none" placeholder={`${field.label} (comma separated)`} />;
+      return <input type="text" value={Array.isArray(val) ? val.join(", ") : val || ""} onChange={(e) => onChange(e.target.value.split(",").map((s) => s.trim()).filter(Boolean))} className={inputClassName} placeholder={`${field.label} (comma separated)`} />;
     }
-    return <input type={field.type || "text"} value={val || ""} onChange={(e) => onChange(e.target.value)} className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-foreground text-sm focus:border-primary focus:outline-none" placeholder={field.label} />;
+
+    return <input type={field.type || "text"} value={val || ""} onChange={(e) => onChange(e.target.value)} className={inputClassName} placeholder={field.label} />;
   };
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+      <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <h1 className="text-2xl font-heading font-black text-foreground">{title}</h1>
-        <Button onClick={openCreate} className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm">
-          <Plus className="w-4 h-4 me-2" />
+        <Button onClick={openCreate} className="bg-primary text-sm font-bold text-primary-foreground hover:bg-primary/90">
+          <Plus className="me-2 h-4 w-4" />
           {t("common.create")}
         </Button>
       </div>
 
-      {/* Search */}
       <div className="relative mb-4">
-        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t("common.search")}
-          className="w-full ps-10 pe-4 py-2.5 bg-card border border-border rounded-lg text-foreground text-sm focus:border-primary focus:outline-none"
+          className="w-full rounded-lg border border-border bg-card py-2.5 pe-4 ps-10 text-sm text-foreground focus:border-primary focus:outline-none"
         />
       </div>
 
-      {/* Table */}
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
                 {columns.map((col) => (
-                  <th key={col.field} className="text-start px-4 py-3 text-muted-foreground font-medium text-xs tracking-wider">
+                  <th key={col.field} className="px-4 py-3 text-start text-xs font-medium tracking-wider text-muted-foreground">
                     {col.label}
                   </th>
                 ))}
-                <th className="text-start px-4 py-3 text-muted-foreground font-medium text-xs tracking-wider">{t("common.actions")}</th>
+                <th className="px-4 py-3 text-start text-xs font-medium tracking-wider text-muted-foreground">{t("common.actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {isLoading ? (
-                <tr><td colSpan={columns.length + 1} className="px-4 py-8 text-center text-muted-foreground">{t("common.loading")}</td></tr>
+                <tr>
+                  <td colSpan={columns.length + 1} className="px-4 py-8 text-center text-muted-foreground">
+                    {t("common.loading")}
+                  </td>
+                </tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={columns.length + 1} className="px-4 py-8 text-center text-muted-foreground">{t("common.no_data")}</td></tr>
+                <tr>
+                  <td colSpan={columns.length + 1} className="px-4 py-8 text-center text-muted-foreground">
+                    {t("common.no_data")}
+                  </td>
+                </tr>
               ) : (
                 filtered.map((item) => (
-                  <tr key={item.id} className="hover:bg-muted/30 transition-colors">
+                  <tr key={item.id} className="transition-colors hover:bg-muted/30">
                     {columns.map((col) => (
                       <td key={col.field} className="px-4 py-3 text-foreground">
                         {col.render ? col.render(item[col.field], item) : String(item[col.field] ?? "")}
@@ -185,11 +264,11 @@ export default function AdminCrudPage({
                     ))}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
-                        <button onClick={() => openEdit(item)} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-primary transition-colors">
-                          <Pencil className="w-4 h-4" />
+                        <button onClick={() => openEdit(item)} className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary">
+                          <Pencil className="h-4 w-4" />
                         </button>
-                        <button onClick={() => handleDelete(item.id)} className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
-                          <Trash2 className="w-4 h-4" />
+                        <button onClick={() => handleDelete(item.id)} className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     </td>
@@ -201,28 +280,29 @@ export default function AdminCrudPage({
         </div>
       </div>
 
-      {/* Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="bg-card border-border max-w-lg max-h-[85vh] overflow-auto">
+        <DialogContent className="max-h-[85vh] max-w-lg overflow-auto border-border bg-card">
           <DialogHeader>
-            <DialogTitle className="text-foreground font-heading">
+            <DialogTitle className="font-heading text-foreground">
               {editItem ? t("common.edit") : t("common.create")} {title}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 mt-4">
+          <div className="mt-4 space-y-4">
             {formFields.map((field) => (
               <div key={field.field}>
                 {field.type !== "boolean" && (
-                  <label className="block text-xs font-medium text-muted-foreground mb-1">{field.label}</label>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">{field.label}</label>
                 )}
                 {renderField(field)}
               </div>
             ))}
           </div>
-          <div className="flex justify-end gap-2 mt-6">
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>{t("common.cancel")}</Button>
-            <Button onClick={handleSave} disabled={saving} className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold">
-              <Save className="w-4 h-4 me-2" />
+          <div className="mt-6 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              {t("common.cancel")}
+            </Button>
+            <Button onClick={handleSave} disabled={saving} className="bg-primary font-bold text-primary-foreground hover:bg-primary/90">
+              <Save className="me-2 h-4 w-4" />
               {saving ? t("common.loading") : t("common.save")}
             </Button>
           </div>
